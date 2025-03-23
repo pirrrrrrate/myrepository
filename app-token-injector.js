@@ -1,57 +1,44 @@
-``javascript
-(function() {
-    'use strict';
+(function () {
+  'use strict';
 
-    // Define the AngularJS module (if it doesn't exist, create it)
-    var app = angular.module('yourApp', []); // Replace 'yourApp' with your app name
-    
-    // Create the service to fetch the token
-    app.service('appTokenService', appTokenService);
+  // Define the AngularJS module (use 'app' or create a new one)
+  var app = angular.module('app', []);
 
-    appTokenService.$inject = ['$http', '$q'];
+  // Create the service to fetch the token
+  app.service('appTokenService', appTokenService);
 
-    function appTokenService($http, $q) {
-        var service = {
-            getAppToken: getAppToken
-        };
+  appTokenService.$inject = ['$http', '$q'];
 
-        return service;
+  function appTokenService($http, $q) {
+    var service = {
+      getAppToken: getAppToken
+    };
 
-        function getAppToken() {
-            var deferred = $q.defer();
+    return service;
 
-            $http.get('/path/to/endpoint') // Replace with your endpoint
-                .then(function(response) {
-                    var token = response.headers('X-App-Fcrtkn');
-                    deferred.resolve(token);
-                })
-                .catch(function(error){
-                   deferred.reject(error);
-                });
+    function getAppToken() {
+      var deferred = $q.defer();
 
-            return deferred.promise;
-        }
+      $http.get('/v1/user/checkEmail?cacheTime=1742769583195') // **Correct endpoint**
+        .then(function (response) {
+          var token = response.headers('X-App-Fcrtkn');
+          deferred.resolve(token);
+        })
+        .catch(function (error) {
+          deferred.reject(error);
+        });
+
+      return deferred.promise;
     }
-    
-    // Create a controller to use the service
-    app.controller('MyController', MyController);
-
-    MyController.$inject = ['$scope', 'appTokenService'];
-
-    function MyController($scope, appTokenService) {
-        var vm = this;
-        vm.myToken;
-        
-        vm.getToken = function(){
-            appTokenService.getAppToken()
-                .then(function(token) {
-                    vm.myToken = token;
-                    console.log('Token:', vm.myToken);
-                }).catch(function(error){
-                    console.error(error);
-                });
-        }
-       
-        vm.getToken();
-    }
+  }
+  // Run the getAppToken function immediately
+  app.run(['appTokenService', function (appTokenService) {
+    appTokenService.getAppToken()
+      .then(function (token) {
+        console.log('Token:', token);
+      })
+      .catch(function (error) {
+        console.error('Error getting token:', error);
+      });
+  }]);
 })();
